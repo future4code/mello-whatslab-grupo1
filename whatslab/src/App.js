@@ -1,69 +1,103 @@
 import React from "react";
-import "./styles.css";
+import "./App.css"
+import { Main, Formulario } from "./AppStyles";
+
+import Mensagens from "./components/Mensagens"
 
 class App extends React.Component {
 
-state = {
-  mensagensEnviadas: [
-  {
-  usuario: "",
-  mensagem: ""
-  } 
-], 
-  valorInputUsuario: "",
-  valorInputMensagem: ""
-};
+  state = {
+    mensagensEnviadas: [
+    {
+    id: 0,
+    usuario: "",
+    mensagem: ""
+    } 
+  ],
+    valorInputUsuario: "",
+    valorInputMensagem: "",
+    contador: 1,
+    intervaloClick: []
+  };
 
-onChangeInputUsuario = (event) => {
-  this.setState ({valorInputUsuario: event.target.value})
-}
-
-onChangeInputMensagem = (event) => {
-  this.setState ({valorInputMensagem: event.target.value})
-}
-
-onClickMandaMensagem = () => {
-  const novaMensagem = {
-    mensagem: this.state.valorInputMensagem,
-    usuario: this.state.valorInputUsuario
+  onChangeInputUsuario = (event) => {
+    this.setState ({valorInputUsuario: event.target.value})
   }
-  const novasMensagens = [...this.state.mensagensEnviadas, novaMensagem];
-  this.setState ({
-    mensagensEnviadas: novasMensagens,
-    valorInputMensagem: ""
-  })
-}
+
+  onChangeInputMensagem = (event) => {
+    this.setState ({valorInputMensagem: event.target.value})
+  }
+
+  onClickMandaMensagem = (event) => {
+    event.preventDefault()
+    if (this.state.valorInputUsuario !== "" && this.state.valorInputMensagem !== "") {
+      const novaMensagem = {
+        id: this.state.contador,
+        usuario: this.state.valorInputUsuario,
+        mensagem: this.state.valorInputMensagem
+      }
+      let novoContador = this.state.contador
+      novoContador++
+  
+      const novasMensagens = [novaMensagem, ...this.state.mensagensEnviadas];
+      this.setState ({
+        mensagensEnviadas: novasMensagens,
+        valorInputMensagem: "",
+        contador: novoContador
+      })
+    } else {
+      alert("Informe os campos Usuário e Mensagem")
+    }
     
-onKeyDownEnter = (event) => {
-  if (event.key === "Enter") {
-    this.onClickMandaMensagem()
   }
-}
+      
+  onKeyDownEnter = (event) => {
+    if (event.key === "Enter") {
+      this.onClickMandaMensagem(event)
+    }
+  }
 
+  onDoubleClickMensagem = (mensagemAlvo) => {
+
+    const doubleClick = () => {
+      const novasMensagens = this.state.mensagensEnviadas.filter((mensagem) => {
+        return mensagem.id !== mensagemAlvo.id
+      })
+      this.setState ({
+        mensagensEnviadas: novasMensagens,
+      })
+    }
+
+    let clicks = [...this.state.intervaloClick], timeout
+
+    clicks.push(new Date().getTime());
+
+    window.clearTimeout(timeout);
+    timeout = window.setTimeout(() => {
+        if (clicks.length > 1 && clicks[clicks.length - 1] - clicks[clicks.length - 2] < 250) {
+            if (window.confirm("Tem certeza que quer deletar essa mensagem?")) {
+              doubleClick()
+            }
+        }
+    }, 250);
+
+    this.setState({
+      intervaloClick: clicks
+    })
+  }
 
   render() {
 
-    const listaDeMensagens = this.state.mensagensEnviadas.map((mensagem) => {
-      
-        return (
-        <div>
-          <span>
-            <strong>{mensagem.usuario}</strong>: {mensagem.mensagem} 
-          </span> 
-        </div>
-        )
-    });
-        
-
     return (
 
-      <div id="App">
+      <Main>
 
-        <div className="containerDeMensagem"> 
-          {listaDeMensagens}
-        </div>
+        <Mensagens
+          mensagens={this.state.mensagensEnviadas}
+          removerMensagem={this.onDoubleClickMensagem}
+        /> 
         
-        <div className="containerDeInput">
+        <Formulario>
               
             <input placeholder={"Usuário"} 
             value={this.state.valorInputUsuario} 
@@ -80,9 +114,9 @@ onKeyDownEnter = (event) => {
             >              
             Enviar 
             </button>
-       </div> 
+        </Formulario> 
        
-     </div>   
+     </Main>   
     );
   }
 }
